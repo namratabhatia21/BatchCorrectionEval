@@ -50,7 +50,7 @@ def compute_lisi(
     n_cells = metadata.shape[0]
     n_labels = len(label_colnames)
     # We need at least 3 * n_neigbhors to compute the perplexity
-    knn = NearestNeighbors(n_neighbors = perplexity * 3, algorithm = 'kd_tree').fit(X)
+    knn = NearestNeighbors(n_neighbors = int(perplexity * 3), algorithm = 'auto').fit(X)
     distances, indices = knn.kneighbors(X)
     # Don't count yourself
     indices = indices[:,1:]
