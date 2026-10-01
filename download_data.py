@@ -19,19 +19,35 @@ import json
 import os
 import shutil
 import tarfile
+import urllib.error
 import urllib.request
 
 REPO = "jinmiaochenlab/batch-effect-removal-benchmarking"
 FOLDERS = ("dataset2", "dataset4", "dataset7")
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
 def _get(url, token=None, accept=None):
+    """GET with the registry token. Redirects (blobs are served from a CDN with a
+    pre-signed URL) are followed without the Authorization header."""
     req = urllib.request.Request(url)
     if token:
         req.add_header("Authorization", f"Bearer {token}")
     if accept:
         req.add_header("Accept", accept)
-    return urllib.request.urlopen(req)
+    try:
+        return urllib.request.build_opener(_NoRedirect).open(req)
+    except urllib.error.HTTPError as e:
+        if e.code in (301, 302, 303, 307, 308):
+            return urllib.request.urlopen(e.headers["Location"])
+        if e.code == 429:
+            raise SystemExit("Docker Hub rate limit reached for anonymous pulls; "
+                             "try again later (the limit resets within a few hours).")
+        raise
 
 
 def main():
