@@ -1,6 +1,6 @@
 data/
 results/
-figures/
+/figures/
 __pycache__/
 *.pyc
 *.h5ad
